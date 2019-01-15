@@ -1,1 +1,1 @@
-This project lets you play chess`
+This project lets you play chess.
