@@ -18,8 +18,6 @@ public class ChessServer {
     private List<Socket> incommingConnections;
     private List<Socket> outgoingConnections;
 
-    public void
-
     private String getString(String pname){
         return (String) params.get(pname);
     }
@@ -57,12 +55,12 @@ public class ChessServer {
 
         try{
 
-            while(true){
+            /*while(true){
 
                 serverSocket.accept();
 
                 if()
-            }
+            }*/
 
         }catch(Exception e){
             System.out.println("Error during scanning: (Scan ended)");
