@@ -1,6 +1,5 @@
-package chessEngine.gameState;
+package chessEngine.old.gameState;
 
-import java.text.ParseException;
 import java.util.regex.Pattern;
 
 public class ChessMove {

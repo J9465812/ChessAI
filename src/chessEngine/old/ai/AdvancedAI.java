@@ -1,11 +1,6 @@
-package chessEngine.ai;
+package chessEngine.old.ai;
 
-import chessEngine.gameState.*;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Random;
+import chessEngine.old.gameState.*;
 
 public class AdvancedAI implements ChessAI {
 
@@ -21,7 +16,7 @@ public class AdvancedAI implements ChessAI {
     @Override
     public ChessMove getAIMove(ChessBoard board) {
 
-        analysedPositions = 0;
+        /*analysedPositions = 0;
         skippedPositions = 0;
 
         ChessMove[] moveList = board.getValidMoves();
@@ -54,10 +49,12 @@ public class AdvancedAI implements ChessAI {
         System.out.println("\nBest move : " + (bestMove == null ? "None" : bestMove.toString()) + " -> " + finalAnalysis);
         System.out.println(analysedPositions + " positions analyzed. " + skippedPositions + " skipped");
 
-        return bestMove;
+        return bestMove;*/
+
+        return null;
     }
 
-    private float deepAnalysis(ChessBoard board, int depth){
+    /*private float deepAnalysis(ChessBoard board, int depth){
 
         float initialAnalysis = simpleAnalysis(board);
 
@@ -117,7 +114,7 @@ public class AdvancedAI implements ChessAI {
 
                         ChessMove move = new ChessMove(x1, y1, x2, y2);
 
-                        if(board.isValidMove(move, false)){
+                        if(board.isValidMove(x1, y1, x2, y2, false)){
                             if(board.isWhiteTurn == board.boardState[x1][y1].isWhite) {
                                 squareControlAdvantage += 0.1f / (board.boardState[x1][y1].value * board.boardState[x1][y1].value);
                             }else{
@@ -130,5 +127,5 @@ public class AdvancedAI implements ChessAI {
         }
 
         return deltaMaterial + squareControlAdvantage;
-    }
+    }*/
 }

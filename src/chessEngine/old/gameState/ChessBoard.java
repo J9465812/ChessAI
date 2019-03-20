@@ -1,16 +1,14 @@
-package chessEngine.gameState;
+package chessEngine.old.gameState;
 
-import chessEngine.ai.AdvancedAI;
-import chessEngine.ai.ChessAI;
-import chessEngine.ai.RandomAI;
-import com.sun.xml.internal.ws.api.model.CheckedException;
-import sun.nio.cs.ext.MacThai;
+import chessEngine.old.ai.AdvancedAI;
+import chessEngine.old.ai.AlphaBetaAI;
+import chessEngine.old.ai.ChessAI;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-public class ChessBoard {
+public class ChessBoard implements java.io.Serializable{
 
     private static final ChessPiece[][] _START_POSITION =
             {
@@ -37,91 +35,92 @@ public class ChessBoard {
     }
 
     public boolean isValidMove(ChessMove move){
-        return isValidMove(move, true);
+        return isValidMove(move.sx, move.sy, move.ex, move.ey, true);
     }
 
-    public boolean isValidMove(ChessMove move, boolean checkColor){
 
-        ChessPiece sourcePiece = boardState[move.sx][move.sy];
-        ChessPiece endPiece = boardState[move.ex][move.ey];
+
+    public boolean isValidMove(int sx, int sy, int ex, int ey, boolean checkColor){
+
+        ChessPiece sourcePiece = boardState[sx][sy];
+        ChessPiece endPiece = boardState[ex][ey];
 
         //System.out.println("S:" + sourcePiece.name());
         //System.out.println("E:" + endPiece.name());
 
         if(sourcePiece == ChessPiece.none || (sourcePiece.isWhite != isWhiteTurn && checkColor) || (!(endPiece == ChessPiece.none || endPiece == ChessPiece.wEpPawn || endPiece == ChessPiece.bEpPawn) && endPiece.isWhite == sourcePiece.isWhite)) return false;
-        if(move.sx == move.ex && move.sy == move.ey) return false;
+        if(sx == ex && sy == ey) return false;
 
         //System.out.println("Move Passed Check 1");
 
         switch(sourcePiece){
             case wKing:
             case bKing:
-                if(!isValidKingMove(sourcePiece.isWhite, move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidKingMove(sourcePiece.isWhite, sx, sy, ex, ey)) return false;
                 break;
             case wRook:
             case bRook:
-                if(!isValidRookMove(move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidRookMove(sx, sy, ex, ey)) return false;
                 break;
             case wBish:
             case bBish:
-                if(!isValidBishopMove(move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidBishopMove(sx, sy, ex,ey)) return false;
                 break;
             case wQueen:
             case bQueen:
-                if(!isValidBishopMove(move.sx, move.sy, move.ex, move.ey) && !isValidRookMove(move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidBishopMove(sx, sy, ex, ey) && !isValidRookMove(sx, sy, ex, ey)) return false;
                 break;
             case wKnight:
             case bKnight:
-                if(!isValidKnightMove(move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidKnightMove(sx, sy, ex, ey)) return false;
                 break;
             case wEpPawn:
             case bEpPawn:
                 return false;
             case wPawn:
             case bPawn:
-                if(!isValidPawnMove(sourcePiece.isWhite, endPiece, move.sx, move.sy, move.ex, move.ey)) return false;
+                if(!isValidPawnMove(sourcePiece.isWhite, endPiece, sx, sy, ex, ey)) return false;
                 break;
         }
 
         //System.out.println("Move Passed Check 2");
 
-        return !applyMoveUnsafe(move).isInCheck(sourcePiece.isWhite);
+        return !applyMoveUnsafe(sx, sy, ex, ey).isInCheck(sourcePiece.isWhite);
     }
 
-    public ChessMove[] getValidMoves(){
+    public int[][] getValidMoves(){
 
-        List<ChessMove> validMoves = new ArrayList<ChessMove>();
+        List<int[]> validMoves = new ArrayList<>();
 
         for(int x = 0; x < 8; x++){
             for(int y = 0; y < 8; y++){
                 if(boardState[x][y] == ChessPiece.none) continue;
                 for(int i = 0; i < 8; i++){
                     for(int j = 0; j < 8; j++){
-                        ChessMove move = new ChessMove(x, y, i, j);
-                        if(isValidMove(move)) validMoves.add(move);
+                        if(isValidMove(x, y, i, j, true)) validMoves.add(new int[]{x, y, i, j});
                     }
                 }
             }
         }
 
-        return validMoves.toArray(new ChessMove[validMoves.size()]);
+        return validMoves.toArray(new int[validMoves.size()][4]);
     }
 
     private boolean isValidKingMove(boolean isWhite, int sx, int sy, int ex, int ey){
 
         if(isWhite && sy == ey && sx == 4 && sy == 0){
             if(ex == 2 && castlingInfo[0][0]){
-                return !isInCheck(true) && isValidMove(new ChessMove(4, 0, 3, 0));
+                return !isInCheck(true) && isValidMove(4, 0, 3, 0, false) && isValidMove(0, 0, 1, 0, false);
             }else if (ex == 6 && castlingInfo[0][1]){
-                return !isInCheck(true) && isValidMove(new ChessMove(4, 0, 5, 0));
+                return !isInCheck(true) && isValidMove(4, 0, 5, 0, false);
             }
         }
 
         if(!isWhite && sy == ey && sx == 4 && sy == 7 && Math.abs(sx-ex) == 2){
             if(ex == 2 && castlingInfo[1][0]){
-                return !isInCheck(false) && isValidMove(new ChessMove(4, 7, 3, 7));
+                return !isInCheck(false) && isValidMove(4, 7, 3, 7, false) && isValidMove(0, 7, 1, 7, false);
             }else if (ex == 6 && castlingInfo[1][1]){
-                return !isInCheck(false) && isValidMove(new ChessMove(4, 7, 5, 7));
+                return !isInCheck(false) && isValidMove(4, 7, 5, 7, false);
             }
         }
 
@@ -185,10 +184,10 @@ public class ChessBoard {
 
         if(!isValidMove(move)) return null;
 
-        return applyMoveUnsafe(move);
+        return applyMoveUnsafe(move.sx, move.sy, move.ex, move.ey);
     }
 
-    private ChessBoard applyMoveUnsafe(ChessMove move){
+    public ChessBoard applyMoveUnsafe(int sx, int sy, int ex, int ey){
 
         ChessPiece[][] newBoard = new ChessPiece[8][8];
 
@@ -200,83 +199,83 @@ public class ChessBoard {
             }
         }
 
-        newBoard[move.ex][move.ey] = newBoard[move.sx][move.sy];
-        newBoard[move.sx][move.sy] = ChessPiece.none;
+        newBoard[ex][ey] = newBoard[sx][sy];
+        newBoard[sx][sy] = ChessPiece.none;
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.wPawn && move.ey == 7){
-            newBoard[move.ex][move.ey] = ChessPiece.wQueen;
+        if(newBoard[ex][ey] == ChessPiece.wPawn && ey == 7){
+            newBoard[ex][ey] = ChessPiece.wQueen;
         }
 
         /** Castling Info BEGIN **/
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.wKing){
+        if(newBoard[ex][ey] == ChessPiece.wKing){
             newCastlingInfo[0][0] = false;
             newCastlingInfo[0][1] = false;
         }
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.bKing){
+        if(newBoard[ex][ey] == ChessPiece.bKing){
             newCastlingInfo[1][0] = false;
             newCastlingInfo[1][1] = false;
         }
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.wRook){
-            if(move.sx == 0){
+        if(newBoard[ex][ey] == ChessPiece.wRook){
+            if(sx == 0){
                 newCastlingInfo[0][0] = false;
-            }else if(move.sx == 7){
+            }else if(sx == 7){
                 newCastlingInfo[0][1] = false;
             }
         }
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.bRook){
-            if(move.sx == 0){
+        if(newBoard[ex][ey] == ChessPiece.bRook){
+            if(sx == 0){
                 newCastlingInfo[1][0] = false;
-            }else if(move.sx == 7){
+            }else if(sx == 7){
                 newCastlingInfo[1][1] = false;
             }
         }
 
-        if(!isWhiteTurn && move.ey == 0){
-            if(move.ex == 0){
+        if(!isWhiteTurn && ey == 0){
+            if(ex == 0){
                 newCastlingInfo[0][0] = false;
-            }else if(move.ex == 7){
+            }else if(ex == 7){
                 newCastlingInfo[0][0] = false;
             }
         }
 
-        if(isWhiteTurn && move.ey == 7){
-            if(move.ex == 0){
+        if(isWhiteTurn && ey == 7){
+            if(ex == 0){
                 newCastlingInfo[1][0] = false;
-            }else if(move.ex == 7){
+            }else if(ex == 7){
                 newCastlingInfo[1][0] = false;
             }
         }
 
         /** Castling Info END **/
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.wKing && move.sx == 4 && move.sy == 0){
+        if(newBoard[ex][ey] == ChessPiece.wKing && sx == 4 && sy == 0){
 
-            if(move.ex == 2){
+            if(ex == 2){
                 newBoard[0][0] = ChessPiece.none;
                 newBoard[3][0] = ChessPiece.wRook;
-            }else if(move.ex == 6){
+            }else if(ex == 6){
                 newBoard[7][0] = ChessPiece.none;
                 newBoard[5][0] = ChessPiece.wRook;
             }
         }
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.bKing && move.sx == 4 && move.sy == 7){
+        if(newBoard[ex][ey] == ChessPiece.bKing && sx == 4 && sy == 7){
 
-            if(move.ex == 2){
+            if(ex == 2){
                 newBoard[0][7] = ChessPiece.none;
                 newBoard[3][7] = ChessPiece.bRook;
-            }else if(move.ex == 6){
+            }else if(ex == 6){
                 newBoard[7][7] = ChessPiece.none;
                 newBoard[5][7] = ChessPiece.bRook;
             }
         }
 
-        if(newBoard[move.ex][move.ey] == ChessPiece.bPawn && move.ey == 0){
-            newBoard[move.ex][move.ey] = ChessPiece.bQueen;
+        if(newBoard[ex][ey] == ChessPiece.bPawn && ey == 0){
+            newBoard[ex][ey] = ChessPiece.bQueen;
         }
 
         for(int x = 0; x < 8; x++){
@@ -287,21 +286,21 @@ public class ChessBoard {
             }
         }
 
-        if(Math.abs(move.sy - move.ey) == 2 && move.sx == move.ex){
+        if(Math.abs(sy - ey) == 2 && sx == ex){
 
-            if(boardState[move.sx][move.sy] == ChessPiece.wPawn){
-                newBoard[move.sx][move.sy + 1] = ChessPiece.wEpPawn;
-            }else if(boardState[move.sx][move.sy] == ChessPiece.bPawn){
-                newBoard[move.sx][move.sy - 1] = ChessPiece.bEpPawn;
+            if(boardState[sx][sy] == ChessPiece.wPawn){
+                newBoard[sx][sy + 1] = ChessPiece.wEpPawn;
+            }else if(boardState[sx][sy] == ChessPiece.bPawn){
+                newBoard[sx][sy - 1] = ChessPiece.bEpPawn;
             }
         }
 
-        if((boardState[move.sx][move.sy] == ChessPiece.wPawn || boardState[move.sx][move.sy] == ChessPiece.bPawn)){
+        if((boardState[sx][sy] == ChessPiece.wPawn || boardState[sx][sy] == ChessPiece.bPawn)){
 
-            if(boardState[move.ex][move.ey] == ChessPiece.wEpPawn){
-                newBoard[move.ex][move.ey + 1] = ChessPiece.none;
-            }else if(boardState[move.ex][move.ey] == ChessPiece.bEpPawn){
-                newBoard[move.ex][move.ey - 1] = ChessPiece.none;
+            if(boardState[ex][ey] == ChessPiece.wEpPawn){
+                newBoard[ex][ey + 1] = ChessPiece.none;
+            }else if(boardState[ex][ey] == ChessPiece.bEpPawn){
+                newBoard[ex][ey - 1] = ChessPiece.none;
             }
         }
 
@@ -357,6 +356,19 @@ public class ChessBoard {
         return false;
     }
 
+    public int count(ChessPiece piece){
+
+        int total = 0;
+
+        for(int x = 0; x < 8; x++){
+            for(int y = 0; y < 8; y++){
+                if(boardState[x][y] == piece) total ++;
+            }
+        }
+
+        return total;
+    }
+
     public boolean isCheckMate(){
 
         return isInCheck(isWhiteTurn) && getValidMoves().length == 0;
@@ -409,7 +421,7 @@ public class ChessBoard {
         ChessBoard board = START_POSITION;
         Scanner scanner = new Scanner(System.in);
 
-        ChessAI ai = new AdvancedAI(4);
+        ChessAI ai = new AlphaBetaAI(4);
 
         while(true){
 
@@ -434,7 +446,7 @@ public class ChessBoard {
                 System.out.print("\nThat move is invalid. ");
             }
 
-            board = board.applyMoveUnsafe(move);
+            board = board.applyMove(move);
             System.out.println(board.toString());
 
             if(board.isCheckMate()){
@@ -487,7 +499,7 @@ public class ChessBoard {
 
         /*ChessBoard board = START_POSITION;
 
-        ChessAI ai = new AdvancedAI(5);
+        ChessAI ai = new AlphaBetaAI(2);
 
         System.out.println(board.toString());
 
@@ -517,5 +529,24 @@ public class ChessBoard {
                 System.exit(0);
             }
         }*/
+
+        // Speed Test
+
+        /*System.out.println(START_POSITION.toString());
+
+        long time = System.currentTimeMillis();
+
+        int scans = 0;
+
+        for(int t = 0; t < 1000000; t++) {
+            START_POSITION.getValidMoves();
+            scans++;
+        }
+
+        time = System.currentTimeMillis() - time;
+
+        System.out.println("Checked " + scans + " scans in " + time + "ms");
+        System.out.println("Move Checking Rate: " + scans*1000/time + " scans/sec");
+        System.out.println("Move Checking Rate: " + ((double)(time)/scans*1000000) + " ns/scan");*/
     }
 }

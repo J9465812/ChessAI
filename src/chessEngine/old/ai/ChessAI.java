@@ -1,6 +1,6 @@
-package chessEngine.ai;
+package chessEngine.old.ai;
 
-import chessEngine.gameState.*;
+import chessEngine.old.gameState.*;
 
 public interface ChessAI {
 
